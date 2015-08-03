@@ -1,24 +1,32 @@
 
 var json;
 var items;
-var count;
+var ___count;
 var canvas;
+var tanvas;
 var w;
 var h;
 var context;
 var measures;
 var constants;
 var level = 0;
+var focus = 0;
+var stack = []; //STACK of indexes been choose
+var frags = []; //Stack of lengths of levels been choose
+var parental;
+var debugSplice = 6;
 
 $( document ).ready(function() {
 	init();
     start();
-    redraw();
+  	redrawBackground();
+  	redrawElements();
 });
 
 $( window ).resize(function() {
 	init();
-  	redraw();
+  	redrawBackground();
+  	redrawElements();
 });
 
 function init()  {
@@ -31,41 +39,78 @@ function init()  {
     constants.item = {width:200, height:200, radius: 300, semiwidth:100, semiheight:100};
     constants.kern = {width:200, height:200, radius: 150, semiwidth:100, semiheight:100};
 	canvas = $('#miCanvas')[0];
+	tanvas = $('#miTanvas')[0];
 }
 
 function start() {
-	json = getJson()[0];
-	items = json.items;
-	count = items.length;
+	var pjson = getJson();
+	json = pjson[0];
+	items = json.content;
+	//items = items.splice(-debugSplice, debugSplice);
+	//count = items.length;
+	frags.push(items.length);
 	console.log("items count:" + items.length);	
+	console.log("items counj:" + json.content.length);
 }
 
-function redraw() {
+function redrawBackground() {
 	measures.center.x = $(window).scrollLeft() + $(window).width() / 2;
 	measures.center.y = $(window).scrollTop() + $(window).height() / 2;
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
-	context = canvas.getContext('2d'); 
+	tanvas.width = window.innerWidth;
+	tanvas.height = window.innerHeight;
+	$(tanvas).css('opacity','0');
+	context = canvas.getContext('2d');
+	tontext = tanvas.getContext('2d'); 
 	context.clearRect(0, 0, canvas.width, canvas.height);
-	$('#viewport').empty();
+	tontext.clearRect(0, 0, tanvas.width, tanvas.height);
 
 	context.fillStyle="#DDD";
 	context.fillRect(0,0, canvas.width, canvas.height);
+	tontext.fillStyle="#000";
+	tontext.fillRect(0,0, tanvas.width, tanvas.height);
 
-	for (var i = 0; i < items.length; i++) {
-		var item = items[i];
-		var origin = getElementRadialLocation(count, i, 0, constants.item.radius);
-		drawElement(origin.top, origin.left, item.title.text, i, count);
-		drawElementBackground(measures.center.x, measures.center.y, 1200, i, count);
+	var litems = getLastBranch();	
+	var parent = getLastParent();
+
+	for (var index = 0; index < litems.length; index++) {
+		drawElementBackground(measures.center.x, measures.center.y, 1200, index, litems.length);
 	};
 
-	drawElement(measures.center.y, measures.center.x, "start");
-	drawPolygonCenterElementBackground(measures.center.x, measures.center.y, constants.kern.radius, count);
+	drawCenterElementBackground(measures.center.x, measures.center.y, constants.kern.radius, litems.length);
+}
+
+function redrawElements(except_index, except_item) {
+	if (except_item == undefined) {
+		$('#viewport').empty();
+	} else {
+		$(except_item).siblings().remove();
+	}
+	
+	var litems = getLastBranch();
+	var parent = getLastParent();
+	
+	for (var index = 0; index < litems.length; index++) {
+		if (except_index != index) {
+			var item = litems[index];
+			var origin = getElementRadialLocation(litems.length, index, 0, constants.item.radius);
+			drawElement(origin.top, origin.left, item.title.text, index, litems.length, evolveTo);
+		}
+	};
+	
+	drawElement(measures.center.y, measures.center.x, parent.title.text, -1, litems.length, involveTo);
 }
 
 function redrawEvolve(color) {
-	context.fillStyle=color;
-	context.fillRect(0,0, canvas.width, canvas.height);
+	tontext.fillStyle = color;
+	tontext.fillRect(0,0, tanvas.width, tanvas.height);
+	$(tontext).fadeIn("slow",1, function(){
+		context.fillStyle = color;
+		context.fillRect(0,0, canvas.width, canvas.height);
+		redrawBackground();
+		redrawElements();
+	});
 }
 
 function getElementRadialLocation(count, index, weight, radius) {
@@ -89,7 +134,7 @@ function getElementSemiRadialLocation(count, index, weight, radius) {
 }
 
 
-function drawElement (top, left, _text, index, count) {
+function drawElement (top, left, _text, index, count, _click) {
 	$('<div>').appendTo('#viewport').css(
 		{
 			position: 'absolute', 
@@ -117,51 +162,151 @@ function drawElement (top, left, _text, index, count) {
 			left: left - constants.item.semiwidth,
 		},
 		"fast"
-	).click(function(){
-		evolveTo(this, index, count, top, left);
-	});
+	).click(function(){_click(this, index, count, top, left)});
+}
+
+function getItemChild(_items) {
+	if(_items && _items.content && _items.length >0 ) {
+		return _item.content;
+	}
+}
+
+function getItemsAtLevel(_index, _level) {
+	if (items && items.length > 0) {
+		if (_level == 0) {
+			return items;
+		} else if (_level > 0) {
+			var lastchild = items;
+			for (var i = 0; i <= _level; i++) {
+				if(lastchild && lastchild.content && lastchild.length > 0) {
+					console.log("_level has content "+_level);
+					lastchild = lastchild.content;
+				} else {
+					console.log("_level has NO content "+_level);
+					lastchild = null;
+				}
+			}
+			return lastchild;
+		}
+	}
+}
+
+function getLastBranch() {
+	var last = json;
+	console.log("stack length "+stack.length);
+	if (stack.length>0) {
+		for (var i = 0; i < stack.length; i++) {
+			last = getContent(last);
+			last = last[stack[i]];
+		};
+	}
+	//if (stack.length>0) {
+	//	return getContent(last);
+	//}
+	return getContent(last);
+}
+
+function getLastParent() {
+	if (stack.length == 0) {
+		return json;
+	} else {
+		var last = items;
+		for (var i = 0; i < stack.length; i++) {
+			if (i>0) last = getContent(last);
+			last = last[stack[i]];
+		};
+		return last;
+	}
+}
+
+function getNextItems(_index) {
+	var _level = stack.length;
+	if (items && items.length > 0) {
+		var lastchild = getLastBranch();
+		return getContent(lastchild[_index]);
+	}
+}
+
+function getContent(branch) {
+	console.log("getting content");
+	if (branch && branch.content && branch.content.length > 0) {
+		console.log("getting content of branch with childcount:"+branch.content.length);
+		return branch.content;
+	} else {
+		console.log("noContent");
+	}
 }
 
 function evolveTo(item, index, count, top, left) {
-	var color = getRadialColor(index, count);
+	var upperitems = getNextItems(index);
+	if (upperitems != null) {
+		stack.push(index);
+		frags.push(upperitems.length);
+		var color = getRadialColor(index, count);
+		//$(item).click(function(){
+		//	involveTo(item, index, count, top, left);
+		//});
+		$(item).siblings().hide("fast", function(){
+			$(item).stop().animate(
+				{
+					top: measures.center.y - constants.item.semiheight,
+					left: measures.center.x - constants.item.semiwidth,
+				},
+				"fast",
+				function() {
+					redrawEvolve(color);
+				}
+			);
+		});
+	} else {
+		console.log("no upper items");
+	}	
+}
+
+function involveTo(item, index, count, top, left) {
+	var lastindex = stack.pop();
+	var lastbranch = getLastBranch();
+	var lastlength = frags.pop();
+	var origin = getElementRadialLocation(lastlength, lastindex, 0, constants.item.radius);
+	var top = origin.top;
+	var left = origin.left;
+	var item$ = $(item);
 	
 	$(item).siblings().hide("fast", function(){
-		redrawEvolve(color);
-		$(item).animate(
-			{
-				top: measures.center.y - constants.item.semiheight,
-				left: measures.center.x - constants.item.semiwidth,
-			},
-			"fast"
-		);
+		$(item).stop().animate(
+		{
+			opacity: 1,
+			top: top - constants.item.semiheight,
+			left: left - constants.item.semiwidth,
+		},
+		"fast",
+		function() {
+			redrawElements(index, item);
+			redrawBackground();
+		});
 	});
+
+	
 }
 
 function drawCenterElementBackground(x, y, r, c) {
-	var color = getRadialColor(-1, c);
-	context.beginPath();
-	context.arc(x, y, r, 0, 2 * Math.PI, false);
-	context.fillStyle = color;
-	context.fill();
-	context.lineWidth = 1;
-	context.strokeStyle = color;
-	context.stroke();
-}
-
-function drawPolygonCenterElementBackground(x, y, r, c) {
 	var color = getRadialColor(-1, c);
 	context.lineWidth = 5;
 	context.strokeStyle = color;
 	context.fillStyle = color;
 	context.beginPath();
-	for (var i = 0; i <= c; i++) {
-		var origin = getElementSemiRadialLocation(count, i, 0, r);
-		if (i == 0) {
-			context.moveTo(origin.left, origin.top);
-		} else {
-			context.lineTo(origin.left, origin.top);
-		}
-	};
+	if (c > 2) {
+		for (var i = 0; i <= c; i++) {
+			var origin = getElementSemiRadialLocation(c, i, 0, r);
+			if (i == 0) {
+				context.moveTo(origin.left, origin.top);
+			} else {
+				context.lineTo(origin.left, origin.top);
+			}
+		};
+	} else {
+		context.arc(x, y, r, 0, 2 * Math.PI, false);
+	}
 	context.fill();
 	context.stroke();
 }
@@ -171,22 +316,63 @@ function drawElementBackground(x, y, r, i, c) {
 	var semi = Math.PI / c;
 	var starta = (i * 2 * Math.PI / c) - semi;
 	var enda = ((i+1) * 2 * Math.PI / c) - semi;
-	context.lineWidth = 1;
+	starta = (2* Math.PI) - starta; 
+	enda = (2*Math.PI) - enda;
+	console.log("angle at "+i+" is "+starta);
+	context.lineWidth = 0;
 	context.strokeStyle = color;
 	context.fillStyle = color;
 	context.beginPath();
 	context.moveTo(x,y);
-	context.arc(x, y, r, starta, enda, false);
+	context.arc(x, y, r, starta, enda, true);
 	context.lineTo(x,y);
 	context.fill();
-
 	context.stroke();
 }
 
-function getRadialColor(index, count) {
-	if (index < 0) { return "white"; }
-    var h = index * 240 / (count-1);
-    return 'hsl(' + h + ',90%,40%)';
+function getRadialColor(_index, _count) {
+	var tonalw = getLevelTonalWidth();
+	if (_index < 0) { return tonalw.kern; }
+    var h = (_index * tonalw.depth / (_count-1)) + tonalw.base;
+    var s = tonalw.sat;
+    var l = tonalw.light;
+    return 'hsl(' + h + ',' + s + '%,' + l + '%)';
+}
+
+function getLevelTonalWidth() {
+	var _base = 40;
+	var dase = 40;
+	var _depth = 200;
+	var pepth = 200;
+	var _sat = 60;
+	var s = 60;
+	var _light = 50;
+	var l = 50;
+	var _kern = 'white';
+	var satstep = 20;
+	var lightstep = -10;
+
+	_sat = _sat + (satstep * frags.length);
+	_light = _light + (lightstep * frags.length);
+
+	if (stack.length != 0) {
+		for (var i = 0; i < frags.length-1; i++) {
+			var lale = frags[i];
+			var lali = stack[i];
+			var slice = 1 / (lale + 2);
+			var plice = 1 / lale;
+			pepth = plice * pepth;
+			dase = (lali * pepth) + dase;
+			_depth = slice * _depth;
+			_base = (lali * _depth) + _base;
+			if (i == frags.length-2) {
+				var h = dase;
+				_kern = 'hsl(' + h + ',' + s + '%,' + l + '%)';
+			}
+		};
+	}
+
+	return {base:_base, depth:_depth, sat:_sat, light:_light, kern:_kern};
 }
 
 
@@ -206,13 +392,14 @@ function getJson() {
     "select":"breath"
   },
   "started":"tour", 
-  "first":0,   
-  "items": [
+  "first":0,
+  "title":{"text":"Start"},   
+  "content": [
         {
           "appearance": "soundtext",
           "focus": 1,
           "title": {
-              "text": "Telephone",
+              "text": "1Telephone",
               "sex": "default",
               "speed": 1,
               "pitch": 1,
@@ -231,13 +418,16 @@ function getJson() {
               "name": "dial",
               "predicate": "",
               "gesture": "select"
-          }
+          },
+          "content":[
+          	{"title":{"text":"DO"}},{"title":{"text":"RE"}},{"title":{"text":"MI"}}
+          ]
       },
       {
           "appearance": "soundtext",
           "focus": 1,
           "title": {
-              "text": "Contacts",
+              "text": "2Contacts",
               "sex": "default",
               "speed": 1,
               "pitch": 1,
@@ -256,13 +446,22 @@ function getJson() {
               "name": "contacts",
               "predicate": "",
               "gesture": "select"
-          }
+          },
+          "content":[
+          	{"title":{"text":"FA"}},{"title":{"text":"SOL"}},
+          	{
+          		"title":{"text":"LA"},
+          		"content":[
+					{"title":{"text":"ut"}},{"title":{"text":"queant"}}
+          		]
+          	}
+          ]
       },
       {
           "appearance": "soundtext",
           "focus": 1,
           "title": {
-              "text": "Music",
+              "text": "3Music",
               "sex": "default",
               "speed": 1,
               "pitch": 1,
@@ -281,13 +480,16 @@ function getJson() {
               "name": "music",
               "predicate": "",
               "gesture": "select"
-          }
+          },
+          "content":[
+          	{"title":{"text":"SI"}},{"title":{"text":"DO"}}
+          ]
       },
       {
           "appearance": "soundtext",
           "focus": 0,
           "title": {
-              "text": "Date Time",
+              "text": "4Date Time",
               "sex": "default",
               "speed": 1,
               "pitch": 1,
@@ -312,13 +514,17 @@ function getJson() {
               "name": "content",
               "predicate": "daytime",
               "gesture": "select"
-          }
+          },
+          "content":[
+          	{"title":{"text":"SI"}},{"title":{"text":"DO"}}
+          ]
+
       },
       {
           "appearance": "soundtext",
           "focus": 0,
           "title": {
-              "text": "Weather",
+              "text": "5Weather",
               "sex": "default",
               "speed": 1,
               "pitch": 1,
@@ -343,13 +549,16 @@ function getJson() {
               "name": "content",
               "predicate": "fullweather",
               "gesture": "select"
-          }
+          },
+          "content":[
+          	{"title":{"text":"SI"}},{"title":{"text":"DO"}},{"title":{"text":"XXX"}},{"title":{"text":"YYY"}}
+          ]
       },
       {
           "appearance": "soundtext",
           "focus": 0,
           "title": {
-              "text": "Configuration",
+              "text": "6Configuration",
               "sex": "default",
               "speed": 1,
               "pitch": 1,
@@ -368,7 +577,11 @@ function getJson() {
               "name": "config",
               "predicate": "",
               "gesture": "select"
-          }
+          },
+          "content":[
+          	{"title":{"text":"SI"}},{"title":{"text":"DO"}},{"title":{"text":"XXX"}},{"title":{"text":"YYY"}},
+          	{"title":{"text":"SI"}},{"title":{"text":"DO"}},{"title":{"text":"XXX"}},{"title":{"text":"YYY"}}
+          ]
       }
       
   ]
