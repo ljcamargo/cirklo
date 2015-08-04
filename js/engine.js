@@ -86,6 +86,7 @@ function redrawElements(except_index, except_item) {
 		$('#viewport').empty();
 	} else {
 		$(except_item).siblings().remove();
+		$(except_item).click(function(){evolveTo});
 	}
 	
 	var litems = getLastBranch();
@@ -193,16 +194,12 @@ function getItemsAtLevel(_index, _level) {
 
 function getLastBranch() {
 	var last = json;
-	console.log("stack length "+stack.length);
 	if (stack.length>0) {
 		for (var i = 0; i < stack.length; i++) {
 			last = getContent(last);
 			last = last[stack[i]];
 		};
 	}
-	//if (stack.length>0) {
-	//	return getContent(last);
-	//}
 	return getContent(last);
 }
 
@@ -228,12 +225,8 @@ function getNextItems(_index) {
 }
 
 function getContent(branch) {
-	console.log("getting content");
 	if (branch && branch.content && branch.content.length > 0) {
-		console.log("getting content of branch with childcount:"+branch.content.length);
 		return branch.content;
-	} else {
-		console.log("noContent");
 	}
 }
 
@@ -243,9 +236,6 @@ function evolveTo(item, index, count, top, left) {
 		stack.push(index);
 		frags.push(upperitems.length);
 		var color = getRadialColor(index, count);
-		//$(item).click(function(){
-		//	involveTo(item, index, count, top, left);
-		//});
 		$(item).siblings().hide("fast", function(){
 			$(item).stop().animate(
 				{
@@ -265,14 +255,21 @@ function evolveTo(item, index, count, top, left) {
 
 function involveTo(item, index, count, top, left) {
 	var lastindex = stack.pop();
-	var lastbranch = getLastBranch();
-	var lastlength = frags.pop();
+	var lastlength = frags.pop(); lastlength = frags[frags.length-1];
+	console.log("radial location for length "+lastlength+" index "+lastindex);
 	var origin = getElementRadialLocation(lastlength, lastindex, 0, constants.item.radius);
 	var top = origin.top;
 	var left = origin.left;
 	var item$ = $(item);
 	
-	$(item).siblings().hide("fast", function(){
+	$(item).stop().siblings().hide("fast", function(){
+		//$(item).stop().hide("fast", function(){
+			//redrawElements(index, item);
+			//redrawBackground();
+
+		//});
+
+		
 		$(item).stop().animate(
 		{
 			opacity: 1,
@@ -281,9 +278,10 @@ function involveTo(item, index, count, top, left) {
 		},
 		"fast",
 		function() {
-			redrawElements(index, item);
+			redrawElements(lastindex, item);
 			redrawBackground();
 		});
+		
 	});
 
 	
@@ -318,7 +316,6 @@ function drawElementBackground(x, y, r, i, c) {
 	var enda = ((i+1) * 2 * Math.PI / c) - semi;
 	starta = (2* Math.PI) - starta; 
 	enda = (2*Math.PI) - enda;
-	console.log("angle at "+i+" is "+starta);
 	context.lineWidth = 0;
 	context.strokeStyle = color;
 	context.fillStyle = color;
@@ -340,10 +337,10 @@ function getRadialColor(_index, _count) {
 }
 
 function getLevelTonalWidth() {
-	var _base = 40;
-	var dase = 40;
-	var _depth = 200;
-	var pepth = 200;
+	var _base = 0;
+	var dase = 0;
+	var _depth = 240;
+	var pepth = 240;
 	var _sat = 60;
 	var s = 60;
 	var _light = 50;
@@ -399,7 +396,7 @@ function getJson() {
           "appearance": "soundtext",
           "focus": 1,
           "title": {
-              "text": "1Telephone",
+              "text": "Telephone",
               "sex": "default",
               "speed": 1,
               "pitch": 1,
@@ -427,7 +424,7 @@ function getJson() {
           "appearance": "soundtext",
           "focus": 1,
           "title": {
-              "text": "2Contacts",
+              "text": "Contacts",
               "sex": "default",
               "speed": 1,
               "pitch": 1,
@@ -461,7 +458,7 @@ function getJson() {
           "appearance": "soundtext",
           "focus": 1,
           "title": {
-              "text": "3Music",
+              "text": "Music",
               "sex": "default",
               "speed": 1,
               "pitch": 1,
@@ -489,7 +486,7 @@ function getJson() {
           "appearance": "soundtext",
           "focus": 0,
           "title": {
-              "text": "4Date Time",
+              "text": "Date Time",
               "sex": "default",
               "speed": 1,
               "pitch": 1,
@@ -524,7 +521,7 @@ function getJson() {
           "appearance": "soundtext",
           "focus": 0,
           "title": {
-              "text": "5Weather",
+              "text": "Weather",
               "sex": "default",
               "speed": 1,
               "pitch": 1,
@@ -558,7 +555,7 @@ function getJson() {
           "appearance": "soundtext",
           "focus": 0,
           "title": {
-              "text": "6Configuration",
+              "text": "Configuration",
               "sex": "default",
               "speed": 1,
               "pitch": 1,
