@@ -1,7 +1,6 @@
 
 var json;
 var items;
-var ___count;
 var canvas;
 var tanvas;
 var w;
@@ -9,21 +8,18 @@ var h;
 var context;
 var measures;
 var constants;
-var level = 0;
-var focus = 0;
 var stack = []; //STACK of indexes been choose
 var frags = []; //Stack of lengths of levels been choose
-var parental;
 var debugSplice = 6;
 
-$( document ).ready(function() {
+$(document).ready(function() {
 	init();
     start();
   	redrawBackground();
   	redrawElements();
 });
 
-$( window ).resize(function() {
+$(window).resize(function() {
 	init();
   	redrawBackground();
   	redrawElements();
@@ -49,8 +45,6 @@ function start() {
 	//items = items.splice(-debugSplice, debugSplice);
 	//count = items.length;
 	frags.push(items.length);
-	console.log("items count:" + items.length);	
-	console.log("items counj:" + json.content.length);
 }
 
 function redrawBackground() {
@@ -81,49 +75,40 @@ function redrawBackground() {
 	drawCenterElementBackground(measures.center.x, measures.center.y, constants.kern.radius, litems.length);
 }
 
-function redrawElements(except_index, except_item) {
-	if (except_item == undefined) {
+function redrawElements(will, item) {
+	if (will != -1) {
 		$('#viewport').empty();
 	} else {
-		$(except_item).siblings().remove();
-		$(except_item).click(function(){evolveTo});
+		$(item).siblings().remove();
 	}
 	
 	var litems = getLastBranch();
 	var parent = getLastParent();
+
+	drawElement(-1, parent.title.text, -1);
+	$(item).remove();
 	
 	for (var index = 0; index < litems.length; index++) {
-		if (except_index != index) {
+		if (will != index) {
 			var item = litems[index];
-			var origin = getElementRadialLocation(litems.length, index, 0, constants.item.radius);
-			drawElement(origin.top, origin.left, item.title.text, index, litems.length, evolveTo);
+			drawElement(1, item.title.text, index);
 		}
 	};
 	
-	drawElement(measures.center.y, measures.center.x, parent.title.text, -1, litems.length, involveTo);
+	
 }
 
-function redrawEvolve(color) {
-	tontext.fillStyle = color;
-	tontext.fillRect(0,0, tanvas.width, tanvas.height);
-	$(tontext).fadeIn("slow",1, function(){
-		context.fillStyle = color;
-		context.fillRect(0,0, canvas.width, canvas.height);
-		redrawBackground();
-		redrawElements();
-	});
-}
-
-function getElementRadialLocation(count, index, weight, radius) {
+function getRadialLocation(count, index) {
+	var radius = constants.item.radius;
 	var angle = index * 2 * Math.PI / count;
-	var y = radius * Math.sin(angle);
-	var x = radius * Math.cos(angle);
+	var y = (index >= 0) ? (radius * Math.sin(angle)) : 0;
+	var x = (index >= 0) ? (radius * Math.cos(angle)) : 0;
 	var _top = measures.center.y - y;
 	var _left = x + measures.center.x;
 	return {top:_top,left:_left};
 }
 
-function getElementSemiRadialLocation(count, index, weight, radius) {
+function getSemiRadialLocation(count, index, radius) {
 	var angle = index * 2 * Math.PI / count;
 	var semi = Math.PI / count;
 	angle = angle - semi;
@@ -135,7 +120,10 @@ function getElementSemiRadialLocation(count, index, weight, radius) {
 }
 
 
-function drawElement (top, left, _text, index, count, _click) {
+function drawElement (time, _text, index) {
+	var origin = getRadialLocation(last(frags), index);
+	var top = origin.top;
+	var left = origin.left;
 	$('<div>').appendTo('#viewport').css(
 		{
 			position: 'absolute', 
@@ -163,7 +151,7 @@ function drawElement (top, left, _text, index, count, _click) {
 			left: left - constants.item.semiwidth,
 		},
 		"fast"
-	).click(function(){_click(this, index, count, top, left)});
+	).click(function(){volve(time, this, index)});
 }
 
 function getItemChild(_items) {
@@ -216,7 +204,7 @@ function getLastParent() {
 	}
 }
 
-function getNextItems(_index) {
+function getFutureItems(_index) {
 	var _level = stack.length;
 	if (items && items.length > 0) {
 		var lastchild = getLastBranch();
@@ -230,61 +218,51 @@ function getContent(branch) {
 	}
 }
 
-function evolveTo(item, index, count, top, left) {
-	var upperitems = getNextItems(index);
-	if (upperitems != null) {
-		stack.push(index);
-		frags.push(upperitems.length);
-		var color = getRadialColor(index, count);
-		$(item).siblings().hide("fast", function(){
-			$(item).stop().animate(
-				{
-					top: measures.center.y - constants.item.semiheight,
-					left: measures.center.x - constants.item.semiwidth,
-				},
-				"fast",
-				function() {
-					redrawEvolve(color);
-				}
-			);
-		});
-	} else {
-		console.log("no upper items");
-	}	
+function volveDatum(time, will) {
+	//VOLVE: to invole or evolve
+	// TIME > 0 equals future, deterministic freewill future
+	// TIME < 0 equals past, deterministic causal past
+
+	if (time > 0) {
+		var future = getFutureItems(will);
+		if (future == null) return;
+		stack.push(will);
+		frags.push(future.length);
+		return true;
+	} else if (time < 0) {
+		if (stack.length<1) return;
+		var past_index = stack.pop();
+		var past_length = frags.pop(); 
+		return true;
+	}
 }
 
-function involveTo(item, index, count, top, left) {
-	var lastindex = stack.pop();
-	var lastlength = frags.pop(); lastlength = frags[frags.length-1];
-	console.log("radial location for length "+lastlength+" index "+lastindex);
-	var origin = getElementRadialLocation(lastlength, lastindex, 0, constants.item.radius);
-	var top = origin.top;
-	var left = origin.left;
-	var item$ = $(item);
-	
+function volve(time, item, index) {
+
+	if (!volveDatum(time, index)) return;
+
+	var lastindex = (time > 0) ? stack[frags.length-1] : -1;
+	var lastlength = last(frags);
+	var origin = getRadialLocation(lastlength, lastindex);
+	var final_top = origin.top - constants.item.semiheight;
+	var final_left = origin.left - constants.item.semiwidth;
+
 	$(item).stop().siblings().hide("fast", function(){
-		//$(item).stop().hide("fast", function(){
-			//redrawElements(index, item);
-			//redrawBackground();
-
-		//});
-
-		
 		$(item).stop().animate(
-		{
-			opacity: 1,
-			top: top - constants.item.semiheight,
-			left: left - constants.item.semiwidth,
-		},
-		"fast",
-		function() {
-			redrawElements(lastindex, item);
-			redrawBackground();
-		});
-		
+			{
+				top: final_top, left: final_left,
+			},
+			"fast",
+			function() {
+				redrawBackground();
+				redrawElements(lastindex, item);
+			}
+		);
 	});
+}
 
-	
+function last(array) {
+	return array[array.length -1];
 }
 
 function drawCenterElementBackground(x, y, r, c) {
@@ -295,7 +273,7 @@ function drawCenterElementBackground(x, y, r, c) {
 	context.beginPath();
 	if (c > 2) {
 		for (var i = 0; i <= c; i++) {
-			var origin = getElementSemiRadialLocation(c, i, 0, r);
+			var origin = getSemiRadialLocation(c, i, r);
 			if (i == 0) {
 				context.moveTo(origin.left, origin.top);
 			} else {
