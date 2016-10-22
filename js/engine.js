@@ -48,6 +48,7 @@ function start() {
 }
 
 function redrawBackground() {
+	console.log("redraw background");
 	measures.center.x = $(window).scrollLeft() + $(window).width() / 2;
 	measures.center.y = $(window).scrollTop() + $(window).height() / 2;
 	canvas.width = window.innerWidth;
@@ -67,12 +68,23 @@ function redrawBackground() {
 
 	var litems = getLastBranch();	
 	var parent = getLastParent();
+	loadAllImages(litems, function(images) {
+		console.log("loadAllImages did");
+		for (var index = 0; index < litems.length; index++) {
+			var item = litems[index];
+			var image = images[index];
+			drawElementBackground(measures.center.x, measures.center.y, 1200, index, litems.length, image);
+		};
+		console.log("drawElementBackground did");
 
-	for (var index = 0; index < litems.length; index++) {
-		drawElementBackground(measures.center.x, measures.center.y, 1200, index, litems.length);
-	};
+		loadImage(parent, function(image){
+			console.log("loaded image for center "+image);
+			drawCenterElementBackground(measures.center.x, measures.center.y, constants.kern.radius, litems.length, image);
+		});
+		
+	});
 
-	drawCenterElementBackground(measures.center.x, measures.center.y, constants.kern.radius, litems.length);
+	
 }
 
 function redrawElements(will, item) {
@@ -120,7 +132,7 @@ function getSemiRadialLocation(count, index, radius) {
 }
 
 
-function drawElement (time, _text, index) {
+function drawElement (time, text, index) {
 	var origin = getRadialLocation(last(frags), index);
 	var top = origin.top;
 	var left = origin.left;
@@ -135,7 +147,7 @@ function drawElement (time, _text, index) {
 			zIndex: 100
 		}
 	).append(
-		$('<p>').text(_text).css(
+		$('<p>').text(text).css(
 			{
 				width: constants.item.width,
 				textAlign: "center",
@@ -154,24 +166,24 @@ function drawElement (time, _text, index) {
 	).click(function(){volve(time, this, index)});
 }
 
-function getItemChild(_items) {
-	if(_items && _items.content && _items.length >0 ) {
-		return _item.content;
+function getItemChild(items) {
+	if(items && items.content && items.length >0 ) {
+		return item.content;
 	}
 }
 
-function getItemsAtLevel(_index, _level) {
+function getItemsAtLevel(index, level) {
 	if (items && items.length > 0) {
-		if (_level == 0) {
+		if (level == 0) {
 			return items;
-		} else if (_level > 0) {
+		} else if (level > 0) {
 			var lastchild = items;
-			for (var i = 0; i <= _level; i++) {
+			for (var i = 0; i <= level; i++) {
 				if(lastchild && lastchild.content && lastchild.length > 0) {
-					console.log("_level has content "+_level);
+					console.log("_level has content " + level);
 					lastchild = lastchild.content;
 				} else {
-					console.log("_level has NO content "+_level);
+					console.log("_level has NO content " + level);
 					lastchild = null;
 				}
 			}
@@ -201,6 +213,50 @@ function getLastParent() {
 			last = last[stack[i]];
 		};
 		return last;
+	}
+}
+
+function loadAllImages(items, callback) {
+	var images = [];
+	var cnt = 0;
+	for (var index = 0; index < items.length; index++) {
+		var imageSrc = items[index].image;
+		if (imageSrc != null) {
+			var image = new Image();
+		    image.onload = function() {
+		        ++cnt;
+		        if (cnt >= items.length) callback(images);
+		    };
+		    image.onerror = function() {
+		    	++cnt;
+		        if (cnt >= items.length) callback(images);
+		    }
+		    image.src = imageSrc;
+	    	images.push(image);
+		} else {
+			images.push(null);
+			++cnt;
+			if (cnt >= items.length) callback(images);
+		}
+	};
+}
+
+function loadImage(item, callback) {
+	console.log("loadImage");
+	var imageSrc = item.image;
+	if (imageSrc != null) {
+		console.log("loadImage img not null");
+		var image = new Image();
+		image.onload = function() {
+			callback(image);
+		};
+		image.onerror = function() {
+			callback();
+		};
+		image.src = imageSrc;
+	} else {
+		console.log("loadImage img IS null");
+		callback();
 	}
 }
 
@@ -265,15 +321,19 @@ function last(array) {
 	return array[array.length -1];
 }
 
-function drawCenterElementBackground(x, y, r, c) {
-	var color = getRadialColor(-1, c);
+function drawCenterElementBackground(x, y, radius, count, image) {
+	console.log("drawCenterElementBackground");
+	console.log("image is "+image);
+	var color = getRadialColor(-1, count);
+	var fill = color ;
+	if (image != null) fill = context.createPattern(image,'repeat');
 	context.lineWidth = 5;
 	context.strokeStyle = color;
-	context.fillStyle = color;
+	context.fillStyle = fill;
 	context.beginPath();
-	if (c > 2) {
-		for (var i = 0; i <= c; i++) {
-			var origin = getSemiRadialLocation(c, i, r);
+	if (count > 2) {
+		for (var i = 0; i <= count; i++) {
+			var origin = getSemiRadialLocation(count, i, radius);
 			if (i == 0) {
 				context.moveTo(origin.left, origin.top);
 			} else {
@@ -281,26 +341,36 @@ function drawCenterElementBackground(x, y, r, c) {
 			}
 		};
 	} else {
-		context.arc(x, y, r, 0, 2 * Math.PI, false);
+		context.arc(x, y, radius, 0, 2 * Math.PI, false);
 	}
 	context.fill();
 	context.stroke();
 }
 
-function drawElementBackground(x, y, r, i, c) {
-	var color = getRadialColor(i,c); 
-	var semi = Math.PI / c;
-	var starta = (i * 2 * Math.PI / c) - semi;
-	var enda = ((i+1) * 2 * Math.PI / c) - semi;
-	starta = (2* Math.PI) - starta; 
-	enda = (2*Math.PI) - enda;
+function drawElementBackground(x, y, radius, index, count, image) {
+	var color = getRadialColor(index,count); 
+	var semi = Math.PI / count;
+	var starta = (index * 2 * Math.PI / count) - semi;
+	var enda = ((index + 1) * 2 * Math.PI / count) - semi;
+	starta = (2 * Math.PI) - starta; 
+	enda = (2 * Math.PI) - enda;
+
+	if (image != null) {
+		var pattern = context.createPattern(image,'repeat');
+		drawArc(x, y, radius, starta, enda, color, pattern);
+	} else {
+		drawArc(x, y, radius, starta, enda, color, color);
+	}
+}
+
+function drawArc(x, y, radius, start, end, stroke, fill) {
 	context.lineWidth = 0;
-	context.strokeStyle = color;
-	context.fillStyle = color;
+	context.strokeStyle = stroke;
+	context.fillStyle = fill;
 	context.beginPath();
-	context.moveTo(x,y);
-	context.arc(x, y, r, starta, enda, true);
-	context.lineTo(x,y);
+	context.moveTo(x, y);
+	context.arc(x, y, radius, start, end, true);
+	context.lineTo(x, y);
 	context.fill();
 	context.stroke();
 }
@@ -312,6 +382,33 @@ function getRadialColor(_index, _count) {
     var s = tonalw.sat;
     var l = tonalw.light;
     return 'hsl(' + h + ',' + s + '%,' + l + '%)';
+}
+
+function getLGBTTTIRadialColor(_index, _count) {
+	switch (_index) {
+	    case 0:
+	        day = "red";
+	        break;
+	    case 1:
+	        day = "orange";
+	        break;
+	    case 2:
+	        day = "yellow";
+	        break;
+	    case 3:
+	        day = "green";
+	        break;
+	    case 4:
+	        day = "turquoise";
+	        break;
+	    case 5:
+	        day = "indigo";
+	        break;
+	    case 6:
+	        day = "violet";
+	        break;
+	}
+	return day;
 }
 
 function getLevelTonalWidth() {
@@ -372,6 +469,7 @@ function getJson() {
   "content": [
         {
           "appearance": "soundtext",
+          "image": "images/arabic.jpg",
           "focus": 1,
           "title": {
               "text": "Telephone",
@@ -400,6 +498,7 @@ function getJson() {
       },
       {
           "appearance": "soundtext",
+          "image": "images/arc.png",
           "focus": 1,
           "title": {
               "text": "Contacts",
@@ -434,6 +533,7 @@ function getJson() {
       },
       {
           "appearance": "soundtext",
+          "image": "images/rainbow.png",
           "focus": 1,
           "title": {
               "text": "Music",
@@ -462,6 +562,7 @@ function getJson() {
       },
       {
           "appearance": "soundtext",
+          "image": "images/argyle.jpg",
           "focus": 0,
           "title": {
               "text": "Date Time",
@@ -491,12 +592,14 @@ function getJson() {
               "gesture": "select"
           },
           "content":[
-          	{"title":{"text":"SI"}},{"title":{"text":"DO"}}
+          	{"image":"images/greek.jpg","title":{"text":"SI"}},
+          	{"image":"images/ramadan.jpg","title":{"text":"DO"}}
           ]
 
       },
       {
           "appearance": "soundtext",
+          "image": "images/blobs.jpg",
           "focus": 0,
           "title": {
               "text": "Weather",
@@ -526,11 +629,15 @@ function getJson() {
               "gesture": "select"
           },
           "content":[
-          	{"title":{"text":"SI"}},{"title":{"text":"DO"}},{"title":{"text":"XXX"}},{"title":{"text":"YYY"}}
+          	{"image":"images/mexican.png","title":{"text":"ONE"}},
+          	{"image":"images/bollywood.jpg","title":{"text":"TWO"}},
+          	{"image":"images/flower.jpg","title":{"text":"THREE"}},
+          	{"image":"images/flowers2.jpg","title":{"text":"FOUR"}}
           ]
       },
       {
           "appearance": "soundtext",
+          "image":"images/carpet.jpg",
           "focus": 0,
           "title": {
               "text": "Configuration",
