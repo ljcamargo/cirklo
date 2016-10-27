@@ -1,0 +1,73 @@
+BODY {
+	overflow: hidden;
+	font-size: 20px;
+	font-family: 'Open Sans';
+	padding: 0;
+	margin: 0;
+	text-shadow: 0px 0px 2px #666;
+}
+
+CANVAS {
+	overflow: hidden;
+	padding: 0;
+	margin: 0;
+}
+
+DIV {
+	padding: 0;
+	margin: 0;
+}
+
+#viewport {
+	width: 100%;
+	height: 100%;
+}
+
+IMG {
+	border: 0;
+}
+
+DIV.radial {
+	padding: 0;
+	text-align: center;
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+}
+
+DIV.kern {
+	text-align: center;
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+	font-size: 125%;
+	font-weight: bold;
+}
+
+.radial > SPAN, .kern > SPAN {
+	/*background-color: #0F0;*/
+	text-align: center;
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.radial > IMG {
+	position: absolute;
+	width: 48px;
+	height: 48px;
+	text-align: center;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.kern > IMG {
+	position: absolute;
+	width: 64px;
+	height: 64px;
+	text-align: center;
+	top: 50%;
+	transform: translateY(-50%);
+}

@@ -8,18 +8,11 @@ var h;
 var context;
 var measures;
 var constants;
-var stack = []; //STACK of indexes been choose
-var frags = []; //Stack of lengths of levels been choose
-var debugSplice = 6;
-
-$(document).ready(function() {
-	init();
-    start();
-  	redrawBackground();
-  	redrawElements();
-});
+var stack = [];
+var frags = [];
 
 $(window).resize(function() {
+	if (json == undefined) return;
 	init();
   	redrawBackground();
   	redrawElements();
@@ -32,19 +25,20 @@ function init()  {
     measures.viewport = {}
     measures.center = {};
     constants = {};
+    constants.extent = {radius: 1200}
     constants.item = {width:200, height:200, radius: 300, semiwidth:100, semiheight:100};
     constants.kern = {width:200, height:200, radius: 150, semiwidth:100, semiheight:100};
 	canvas = $('#miCanvas')[0];
 	tanvas = $('#miTanvas')[0];
 }
 
-function start() {
-	var pjson = getJson();
-	json = pjson[0];
-	items = json.content;
-	//items = items.splice(-debugSplice, debugSplice);
-	//count = items.length;
-	frags.push(items.length);
+function start(object) {
+	this.json = object;
+	this.items = json.content;
+	this.frags.push(items.length);
+	init();
+  	redrawBackground();
+  	redrawElements();
 }
 
 function redrawBackground() {
@@ -61,30 +55,31 @@ function redrawBackground() {
 	context.clearRect(0, 0, canvas.width, canvas.height);
 	tontext.clearRect(0, 0, tanvas.width, tanvas.height);
 
-	context.fillStyle="#DDD";
+	context.fillStyle = "#DDD";
 	context.fillRect(0,0, canvas.width, canvas.height);
-	tontext.fillStyle="#000";
+	tontext.fillStyle = "#000";
 	tontext.fillRect(0,0, tanvas.width, tanvas.height);
 
 	var litems = getLastBranch();	
 	var parent = getLastParent();
+
 	loadAllImages(litems, function(images) {
 		console.log("loadAllImages did");
 		for (var index = 0; index < litems.length; index++) {
 			var item = litems[index];
 			var image = images[index];
-			drawElementBackground(measures.center.x, measures.center.y, 1200, index, litems.length, image);
+			var extent = parent.extent || constants.extent.radius;
+			drawElementBackground(measures.center.x, measures.center.y, extent, index, litems.length, image);
 		};
 		console.log("drawElementBackground did");
 
 		loadImage(parent, function(image){
 			console.log("loaded image for center "+image);
-			drawCenterElementBackground(measures.center.x, measures.center.y, constants.kern.radius, litems.length, image);
+			var radius = parent.radius || constants.kern.radius;
+			drawCenterElementBackground(measures.center.x, measures.center.y, radius, litems.length, image);
 		});
 		
-	});
-
-	
+	});	
 }
 
 function redrawElements(will, item) {
@@ -97,17 +92,15 @@ function redrawElements(will, item) {
 	var litems = getLastBranch();
 	var parent = getLastParent();
 
-	drawElement(-1, parent.title.text, -1);
+	drawElement(parent, -1, -1);
 	$(item).remove();
 	
 	for (var index = 0; index < litems.length; index++) {
 		if (will != index) {
 			var item = litems[index];
-			drawElement(1, item.title.text, index);
+			drawElement(item, index, 1);
 		}
 	};
-	
-	
 }
 
 function getRadialLocation(count, index) {
@@ -131,11 +124,62 @@ function getSemiRadialLocation(count, index, radius) {
 	return {top:_top, left:_left};
 }
 
+function objectInflator(item, $object) {
+	var itemStyle = item.style? item.style : {};
+	var itemClass = item.class? item.class : "";
+	$object
+		.css(itemStyle)
+		.addClass(itemClass)
+	return $object;
+}
 
-function drawElement (time, text, index) {
+function drawElement(item, index, time) {
 	var origin = getRadialLocation(last(frags), index);
 	var top = origin.top;
 	var left = origin.left;
+
+	if (item.title) {
+		var titleText = item.title.text || ""; 	
+		var titleElement = objectInflator(item.title,
+			$('<span>').text(titleText).css(
+				{
+					width: constants.item.width
+				}
+			)
+		);
+	}
+
+	if (item.icon) {
+		var iconImage = item.icon.image || "";
+		var iconPosition = item.icon.position || "left";
+		var iconLeft = (iconPosition == "left") ? "0px" : "auto";
+		var iconTransform = "translateY(-50%);";
+		if (titleElement == undefined) {
+			iconLeft = "50%",
+			iconTransform = "translateX(-50%) translateY(-50%)";
+		}
+		var iconElement = objectInflator(item.icon,
+			$('<img>').attr("src", iconImage).css(
+				{
+					left: iconLeft,
+					transform: iconTransform
+				}
+			)
+		);
+	}
+
+	var itemClass = index < 0 ? "kern" : "radial";
+	var radial = $('<div>').addClass(itemClass).css({
+			width: constants.item.width
+		});
+
+	if (iconPosition == "right") {
+		radial.append(titleElement).append(iconElement);
+	} else {
+		radial.append(iconElement).append(titleElement);
+	}
+		
+
 	$('<div>').appendTo('#viewport').css(
 		{
 			position: 'absolute', 
@@ -146,24 +190,14 @@ function drawElement (time, text, index) {
 			opacity: 0,
 			zIndex: 100
 		}
-	).append(
-		$('<p>').text(text).css(
-			{
-				width: constants.item.width,
-				textAlign: "center",
-				position: "relative",
-				top: "50%",
-				transform: "translateY(-50%)"
-			}
-		)
-	).animate(
+	).append(radial).animate(
 		{
 			opacity: 1,
 			top: top - constants.item.semiheight,
 			left: left - constants.item.semiwidth,
 		},
 		"fast"
-	).click(function(){volve(time, this, index)});
+	).click(function(){ nav(time, this, index) });
 }
 
 function getItemChild(items) {
@@ -274,10 +308,9 @@ function getContent(branch) {
 	}
 }
 
-function volveDatum(time, will) {
-	//VOLVE: to invole or evolve
-	// TIME > 0 equals future, deterministic freewill future
-	// TIME < 0 equals past, deterministic causal past
+function navData(time, will) {
+	// TIME > 0 equals future
+	// TIME < 0 equals past
 
 	if (time > 0) {
 		var future = getFutureItems(will);
@@ -293,9 +326,9 @@ function volveDatum(time, will) {
 	}
 }
 
-function volve(time, item, index) {
+function nav(time, item, index) {
 
-	if (!volveDatum(time, index)) return;
+	if (!navData(time, index)) return;
 
 	var lastindex = (time > 0) ? stack[frags.length-1] : -1;
 	var lastlength = last(frags);
@@ -384,33 +417,6 @@ function getRadialColor(_index, _count) {
     return 'hsl(' + h + ',' + s + '%,' + l + '%)';
 }
 
-function getLGBTTTIRadialColor(_index, _count) {
-	switch (_index) {
-	    case 0:
-	        day = "red";
-	        break;
-	    case 1:
-	        day = "orange";
-	        break;
-	    case 2:
-	        day = "yellow";
-	        break;
-	    case 3:
-	        day = "green";
-	        break;
-	    case 4:
-	        day = "turquoise";
-	        break;
-	    case 5:
-	        day = "indigo";
-	        break;
-	    case 6:
-	        day = "violet";
-	        break;
-	}
-	return day;
-}
-
 function getLevelTonalWidth() {
 	var _base = 0;
 	var dase = 0;
@@ -445,227 +451,4 @@ function getLevelTonalWidth() {
 	}
 
 	return {base:_base, depth:_depth, sat:_sat, light:_light, kern:_kern};
-}
-
-
-function getJson() {
-	return [
-	{
-  "id": 0,
-  "slug": "desktop",
-  "kind": "diskus",
-  "mode": "transparent",
-  "background": "random",
-  "size": "room",
-  "volume": 0.2,
-  "effects": {
-    "fling left":"swoosh2",
-    "fling right":"swoosh",
-    "select":"breath"
-  },
-  "started":"tour", 
-  "first":0,
-  "title":{"text":"Start"},   
-  "content": [
-        {
-          "appearance": "soundtext",
-          "image": "images/arabic.jpg",
-          "focus": 1,
-          "title": {
-              "text": "Telephone",
-              "sex": "default",
-              "speed": 1,
-              "pitch": 1,
-              "volume": 1,
-              "font": "default",
-              "delay": 0
-          },
-          "sound": {
-              "file": "phone",
-              "volume": 1,
-              "delay": 0,
-              "pitch": 1
-          },
-          "click": {
-              "kind": "launch",
-              "name": "dial",
-              "predicate": "",
-              "gesture": "select"
-          },
-          "content":[
-          	{"title":{"text":"DO"}},{"title":{"text":"RE"}},{"title":{"text":"MI"}}
-          ]
-      },
-      {
-          "appearance": "soundtext",
-          "image": "images/arc.png",
-          "focus": 1,
-          "title": {
-              "text": "Contacts",
-              "sex": "default",
-              "speed": 1,
-              "pitch": 1,
-              "volume": 1,
-              "font": "default",
-              "delay": 0
-          },
-          "sound": {
-              "file": "people",
-              "volume": 1,
-              "delay": 0,
-              "pitch": 1
-          },
-          "click": {
-              "kind": "launch",
-              "name": "contacts",
-              "predicate": "",
-              "gesture": "select"
-          },
-          "content":[
-          	{"title":{"text":"FA"}},{"title":{"text":"SOL"}},
-          	{
-          		"title":{"text":"LA"},
-          		"content":[
-					{"title":{"text":"ut"}},{"title":{"text":"queant"}}
-          		]
-          	}
-          ]
-      },
-      {
-          "appearance": "soundtext",
-          "image": "images/rainbow.png",
-          "focus": 1,
-          "title": {
-              "text": "Music",
-              "sex": "default",
-              "speed": 1,
-              "pitch": 1,
-              "volume": 1,
-              "font": "default",
-              "delay": 0
-          },
-          "sound": {
-              "file": "guitar",
-              "volume": 1,
-              "delay": 0,
-              "pitch": 1
-          },
-          "click": {
-              "kind": "launch",
-              "name": "music",
-              "predicate": "",
-              "gesture": "select"
-          },
-          "content":[
-          	{"title":{"text":"SI"}},{"title":{"text":"DO"}}
-          ]
-      },
-      {
-          "appearance": "soundtext",
-          "image": "images/argyle.jpg",
-          "focus": 0,
-          "title": {
-              "text": "Date Time",
-              "sex": "default",
-              "speed": 1,
-              "pitch": 1,
-              "volume": 100,
-              "font": "default",
-              "delay": 0
-          },
-          "sound": {
-              "file": "park",
-              "volume": 100,
-              "delay": 0,
-              "pitch": 1
-          },
-          "hover": {
-              "kind": "tell",
-              "name": "content",
-              "predicate": "time",
-              "gesture": "select"
-          },
-          "click": {
-              "kind": "tell",
-              "name": "content",
-              "predicate": "daytime",
-              "gesture": "select"
-          },
-          "content":[
-          	{"image":"images/greek.jpg","title":{"text":"SI"}},
-          	{"image":"images/ramadan.jpg","title":{"text":"DO"}}
-          ]
-
-      },
-      {
-          "appearance": "soundtext",
-          "image": "images/blobs.jpg",
-          "focus": 0,
-          "title": {
-              "text": "Weather",
-              "sex": "default",
-              "speed": 1,
-              "pitch": 1,
-              "volume": 100,
-              "font": "default",
-              "delay": 0
-          },
-          "sound": {
-              "file": "lake",
-              "volume": 100,
-              "delay": 0,
-              "pitch": 1
-          },
-          "hover": {
-              "kind": "tell",
-              "name": "content",
-              "predicate": "weather",
-              "gesture": "select"
-          },
-          "click": {
-              "kind": "tell",
-              "name": "content",
-              "predicate": "fullweather",
-              "gesture": "select"
-          },
-          "content":[
-          	{"image":"images/mexican.png","title":{"text":"ONE"}},
-          	{"image":"images/bollywood.jpg","title":{"text":"TWO"}},
-          	{"image":"images/flower.jpg","title":{"text":"THREE"}},
-          	{"image":"images/flowers2.jpg","title":{"text":"FOUR"}}
-          ]
-      },
-      {
-          "appearance": "soundtext",
-          "image":"images/carpet.jpg",
-          "focus": 0,
-          "title": {
-              "text": "Configuration",
-              "sex": "default",
-              "speed": 1,
-              "pitch": 1,
-              "volume": 1,
-              "font": "default",
-              "delay": 0
-          },
-          "sound": {
-              "file": "bubbling",
-              "volume": 1,
-              "delay": 0,
-              "pitch": 1
-          },
-          "click": {
-              "kind": "launch",
-              "name": "config",
-              "predicate": "",
-              "gesture": "select"
-          },
-          "content":[
-          	{"title":{"text":"SI"}},{"title":{"text":"DO"}},{"title":{"text":"XXX"}},{"title":{"text":"YYY"}},
-          	{"title":{"text":"SI"}},{"title":{"text":"DO"}},{"title":{"text":"XXX"}},{"title":{"text":"YYY"}}
-          ]
-      }
-      
-  ]
-	}];
 }
