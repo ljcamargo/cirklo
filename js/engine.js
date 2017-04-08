@@ -69,7 +69,8 @@ function redrawBackground() {
 			var item = litems[index];
 			var image = images[index];
 			var extent = parent.extent || constants.extent.radius;
-			drawElementBackground(measures.center.x, measures.center.y, extent, index, litems.length, image);
+			var color = item.color || parent.color;
+			drawElementBackground(measures.center.x, measures.center.y, extent, index, litems.length, image, color);
 		};
 		console.log("drawElementBackground did");
 
@@ -326,8 +327,14 @@ function navData(time, will) {
 	}
 }
 
-function nav(time, item, index) {
+function openInNewTab(url) {
+  var win = window.open(url, '_blank');
+  win.focus();
+}
 
+function nav(time, item, index) {
+	var _item = getLastBranch()[index];
+	if (_item && _item.contentLink) openInNewTab(_item.contentLink);
 	if (!navData(time, index)) return;
 
 	var lastindex = (time > 0) ? stack[frags.length-1] : -1;
@@ -377,11 +384,11 @@ function drawCenterElementBackground(x, y, radius, count, image) {
 		context.arc(x, y, radius, 0, 2 * Math.PI, false);
 	}
 	context.fill();
-	context.stroke();
+	//context.stroke();
 }
 
-function drawElementBackground(x, y, radius, index, count, image) {
-	var color = getRadialColor(index,count); 
+function drawElementBackground(x, y, radius, index, count, image, color) {
+	var _color = color || getRadialColor(index,count); 
 	var semi = Math.PI / count;
 	var starta = (index * 2 * Math.PI / count) - semi;
 	var enda = ((index + 1) * 2 * Math.PI / count) - semi;
@@ -390,9 +397,9 @@ function drawElementBackground(x, y, radius, index, count, image) {
 
 	if (image != null) {
 		var pattern = context.createPattern(image,'repeat');
-		drawArc(x, y, radius, starta, enda, color, pattern);
+		drawArc(x, y, radius, starta, enda, _color, pattern);
 	} else {
-		drawArc(x, y, radius, starta, enda, color, color);
+		drawArc(x, y, radius, starta, enda, _color, _color);
 	}
 }
 
@@ -405,7 +412,7 @@ function drawArc(x, y, radius, start, end, stroke, fill) {
 	context.arc(x, y, radius, start, end, true);
 	context.lineTo(x, y);
 	context.fill();
-	context.stroke();
+	//context.stroke();
 }
 
 function getRadialColor(_index, _count) {

@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>cirkle.tk (alpha)</title>
+		<title>cirklo.tk (alpha)</title>
 		<meta content="text/html; charset=utf-8"/>
 	    <meta charset="UTF-8">
 	    <script src="js/jquery.js" type="text/javascript"></script>
@@ -14,121 +14,247 @@
 		<div id="viewport"></div>
 		<script>
 
-var _ = {
-  "title": {"text":"cirklo.tk"},   
-  "content": [
-        {
-          "image": "images/arabic.jpg",
-          "radius": 280,
-          "title": {
-              "text": "What is it?",
-              "style": {
-              	"fontWeigth": "bold"
-              },
-              "class": "box-shadow"
-          },
-          "icon": {
-              "image": "http://orig04.deviantart.net/e572/f/2015/030/8/0/pickachu_by_transkitten-d8g0dpr.png",
-              "position": "right"
-          },
-          "content":[
-          	{"title":{"text":"DO"}},{"title":{"text":"RE"}},{"title":{"text":"MI"}}
-          ]
-      },
-      {
-          "image": "images/arc.png",
-          "radius": 300,
-          "extent": 600,
-          "title": {
-              "text": "Get It",
-              "style": {
-          		"fontSize": "30px",
-              	"fontWeigth": "bold",
-              	"color": "#000"	
-              },
-          },
-          "icon": {
-              "image": "http://orig04.deviantart.net/e572/f/2015/030/8/0/pickachu_by_transkitten-d8g0dpr.png",
-              "position": "left"
-          },
-          "content":[
-          	{"title":{"text":"FA"}},{"title":{"text":"SOL"}},
-          	{
-          		"title":{"text":"LA"},
-          		"content":[
-					{"title":{"text":"ut"}},{"title":{"text":"queant"}}
-          		]
-          	}
-          ]
-      },
-      {
-          "image": "images/rainbow.png",
-          "focus": 1,
-          "icon": {
-              "image": "http://orig04.deviantart.net/e572/f/2015/030/8/0/pickachu_by_transkitten-d8g0dpr.png",
-              "position": "right"
-          },
-          "content":[
-          	{"title":{"text":"SI"}},{"title":{"text":"DO"}}
-          ]
-      },
-      {
-          "image": "images/argyle.jpg",
-          "focus": 0,
-          "title": {
-              "text": "Get It!",
-              "style": {
-              	"fontSize": "32px"
-              }
-          },
-          "content":[
-          	{"image":"images/ramadan.jpg","title":{"text":"GO"},"style":{"fontSize":"40px","fontWeigth":"bolder"}},
-          	{"image":"images/greek.jpg","title":{"text":"Visit the bitbucket repo"}}
-          ]
+var _ = 
 
+{
+  "title":{
+    "text":"cirklo.tk"
+  },
+  "color": "#000",
+  "content":[
+    {
+      "image":"images/velvet.jpg",
+      "radius":280,
+      "color":"#F00",
+      "title":{
+        "text":"What is it?",
+        "style":{
+          "fontWeigth":"bold",
+          "color":"#FFF"
+        },
+        "class":"box-shadow"
       },
-      {
-          "image": "images/blobs.jpg",
-          "focus": 0,
-          "title": {
-              "text": "Weather",
-              "sex": "default",
-              "speed": 1,
-              "pitch": 1,
-              "volume": 100,
-              "font": "default",
-              "delay": 0
-          },
-          "click": {
-              "kind": "tell",
-              "name": "content",
-              "predicate": "fullweather",
-              "gesture": "select"
-          },
-          "content":[
-          	{"image":"images/mexican.png","title":{"text":"ONE"}},
-          	{"image":"images/bollywood.jpg","title":{"text":"TWO"}},
-          	{"image":"images/flower.jpg","title":{"text":"THREE"}},
-          	{"image":"images/flowers2.jpg","title":{"text":"FOUR"}}
-          ]
+      "icon":{
+        "image":"images/pikachu.png",
+        "position":"right"
       },
-      {
-          "image":"images/carpet.jpg",
-          "focus": 0,
-          "title": {
-              "text": "Examples",
-              "style": {
-              	"color": "#FFF"
-              }
+      "content":[
+        {
+          "title":{
+            "text":"A small library"
           },
-          "content":[
-          	{"title":{"text":"SI"}},{"title":{"text":"DO"}},{"title":{"text":"XXX"}},{"title":{"text":"YYY"}},
-          	{"title":{"text":"SI"}},{"title":{"text":"DO"}},{"title":{"text":"XXX"}},{"title":{"text":"YYY"}}
-          ]
-      }
-      
+          "color":"#F00"
+        },
+        {
+          "title":{
+            "text":"Creates navigatable interfaces"
+          },
+          "color":"#FF0"
+        },
+        {
+          "title":{
+            "text":"JSON based"
+          },
+          "color":"#FFF"
+        }
+      ]
+    },
+    {
+      "image":"images/skinblack.jpg",
+      "radius":300,
+      "extent":600,
+      "title":{
+        "text":"Features",
+        "style":{
+          "fontWeigth":"bold",
+          "color":"#FFF"
+        }
+      },
+      "content":[
+        {
+          "title":{
+            "text":"automatic",
+            "style": {
+              "color":"#FFF"
+            }
+          },
+          "image":"images/skinclear.jpg"
+        },
+        {
+          "title":{
+            "text":"css compatible",
+            "style": {
+              "color":"#FFF"
+            }
+          },
+          "image":"images/skinbrown.jpg"
+        },
+        {
+          "title":{
+            "text":"don't write code",
+            "style": {
+              "color":"#FFF"
+            }
+          },
+          "image":"images/skindark.jpg"
+        }
+      ]
+    },
+    {
+      "image":"images/stains.jpg",
+      "title":{
+        "text":"About",
+        "style":{
+          "color":"#FFF"
+        }
+      },
+      "content":[
+        {
+          "title":{
+            "text":"Luis J Camargo"
+          },
+          "image":"images/redcells.jpg"
+        },
+        {
+          "icon":{
+            "image":"images/linkpikachu.gif",
+            "position":"center"
+          },
+          "image":"images/celularclear.jpg"
+        }
+      ]
+    },
+    {
+      "image":"images/circlesdark.jpg",
+      "focus":0,
+      "title":{
+        "text":"Clone it!",
+        "style":{
+          "fontSize":"32px",
+          "color":"#FFF"
+        }
+      },
+      "content":[
+        {
+          "image":"images/colorspots.jpg",
+          "title":{
+            "text":"from github",
+            "style":{
+              "color":"#FFF",
+              "fontSize":"48px"
+            }
+          },
+          "contentLink":"http://www.github.com/"
+        },
+        {
+          "image":"images/circlesred.jpg",
+          "title":{
+            "text":"of course, open source",
+            "style":{
+              "color":"#FFF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "image":"images/electrophoresis.jpg",
+      "focus":0,
+      "title":{
+        "text":"Usage",
+        "style":{
+          "color":"#FFF"
+        }
+      },
+      "click":{
+        "kind":"tell",
+        "name":"content",
+        "predicate":"fullweather",
+        "gesture":"select"
+      },
+      "content":[
+        {
+          "image":"images/mexican.png",
+          "title":{
+            "text":"ONE"
+          }
+        },
+        {
+          "image":"images/bollywood.jpg",
+          "title":{
+            "text":"TWO"
+          }
+        },
+        {
+          "image":"images/flower.jpg",
+          "title":{
+            "text":"THREE"
+          }
+        },
+        {
+          "image":"images/flowers2.jpg",
+          "title":{
+            "text":"FOUR"
+          }
+        }
+      ]
+    },
+    {
+      "image":"images/knotred.jpg",
+      "focus":0,
+      "title":{
+        "text":"Examples",
+        "style":{
+          "color":"#FFF"
+        }
+      },
+      "content":[
+        {
+          "title":{
+            "text":"SI"
+          }
+        },
+        {
+          "title":{
+            "text":"DO"
+          }
+        },
+        {
+          "title":{
+            "text":"XXX"
+          }
+        },
+        {
+          "title":{
+            "text":"YYY"
+          }
+        },
+        {
+          "title":{
+            "text":"SI"
+          }
+        },
+        {
+          "title":{
+            "text":"DO"
+          }
+        },
+        {
+          "title":{
+            "text":"XXX"
+          }
+        },
+        {
+          "title":{
+            "text":"YYY"
+          }
+        }
+      ]
+    }
   ]
-};
+}
+
+;
 
 $(document).ready(function() {
     start(_);
