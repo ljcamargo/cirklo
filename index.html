@@ -4,15 +4,11 @@
 		<meta content="text/html; charset=utf-8"/>
 	    <meta charset="UTF-8">
 	    <script src="js/jquery.js" type="text/javascript"></script>
-	    <script src="js/engine.js"></script>
+	    <script src="js/cirklo.js"></script>
 	    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Open+Sans" />
-	    <link rel="stylesheet" type="text/css" href="css/default.css">
+	    <link rel="stylesheet" type="text/css" href="css/cirklo.css">
 	</head>
-	<body>
-		<canvas style="z-index:0;" id="miCanvas"></canvas>
-		<canvas style="z-index:1;" id="miTanvas"></canvas>
-		<div id="viewport"></div>
-		<script>
+<script>
 
 var _ = 
 
@@ -211,42 +207,42 @@ var _ =
       "content":[
         {
           "title":{
-            "text":"SI"
+            "text":"1"
           }
         },
         {
           "title":{
-            "text":"DO"
+            "text":"2"
           }
         },
         {
           "title":{
-            "text":"XXX"
+            "text":"3"
           }
         },
         {
           "title":{
-            "text":"YYY"
+            "text":"4"
           }
         },
         {
           "title":{
-            "text":"SI"
+            "text":"5"
           }
         },
         {
           "title":{
-            "text":"DO"
+            "text":"6"
           }
         },
         {
           "title":{
-            "text":"XXX"
+            "text":"7"
           }
         },
         {
           "title":{
-            "text":"YYY"
+            "text":"8"
           }
         }
       ]
@@ -257,8 +253,8 @@ var _ =
 ;
 
 $(document).ready(function() {
-    start(_);
+    cirklo.init('body', _);
 });
-		</script>
-	</body>
+</script>
+<body></body>
 </html>
