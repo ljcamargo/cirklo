@@ -15,6 +15,7 @@ var cirklo = {
 
 	constants: {
 		extent: { radius: 1200 },
+		canvas: {  },
 		item: { width:200, height:200, radius: 300, semiwidth:100, semiheight:100 },
 		kern: { width:200, height:200, radius: 150, semiwidth:100, semiheight:100 }
 	},
@@ -55,19 +56,20 @@ var cirklo = {
 			var litems = cirklo.data.lastBranch();	
 			var parent = cirklo.data.lastParent();
 
-			cirklo.draw.background();
+			cirklo.draw.prepare();
 			cirklo.dom.loadAllImages(litems, function(images) {
 				for (var index = 0; index < litems.length; index++) {
 					var item = litems[index];
 					var image = images[index];
 					var extent = parent.extent || cirklo.constants.extent.radius;
 					var color = item.color || parent.color;
-					cirklo.draw.elementBackground(cirklo.measures.center.x, cirklo.measures.center.y, extent, index, litems.length, image, color);
+					//cirklo.draw.backgroundElement(cirklo.measures.center.x, cirklo.measures.center.y, extent, index, litems.length, image, color);
+					cirklo.draw.synapseElement(cirklo.measures.center.x, cirklo.measures.center.y, extent, index, litems.length, image, color);
 				};
 
 				cirklo.dom.loadImage(parent, function(image){
 					var radius = parent.radius || cirklo.constants.kern.radius;
-					cirklo.draw.centerElementBackground(cirklo.measures.center.x, cirklo.measures.center.y, radius, litems.length, image);
+					//cirklo.draw.centerElement(cirklo.measures.center.x, cirklo.measures.center.y, radius, litems.length, image);
 				});
 				
 			});	
@@ -272,9 +274,10 @@ var cirklo = {
 
 	geometry: {
 
-		radialLocation: function(count, index) {
-			var radius = cirklo.constants.item.radius;
-			var angle = index * 2 * Math.PI / count;
+		radialLocation: function(count, index, radius, offset) {
+			radius = radius || cirklo.constants.item.radius;
+			offset = offset || 0;
+			var angle = (index * 2 * Math.PI / count) + (offset*(Math.PI/180));
 			var y = (index >= 0) ? (radius * Math.sin(angle)) : 0;
 			var x = (index >= 0) ? (radius * Math.cos(angle)) : 0;
 			var _top = cirklo.measures.center.y - y;
@@ -295,14 +298,13 @@ var cirklo = {
 	},
 
 	draw: {
-		background: function() {
+		prepare: function() {
 			cirklo.measures.center.x = $(window).scrollLeft() + $(window).width() / 2;
 			cirklo.measures.center.y = $(window).scrollTop() + $(window).height() / 2;
 			cirklo.canvas.width = window.innerWidth;
 			cirklo.canvas.height = window.innerHeight;
 			cirklo.tanvas.width = window.innerWidth;
 			cirklo.tanvas.height = window.innerHeight;
-			$(cirklo.tanvas).css('opacity','0');
 			cirklo.context = cirklo.canvas.getContext('2d');
 			cirklo.tontext = cirklo.tanvas.getContext('2d'); 
 			cirklo.context.clearRect(0, 0, cirklo.canvas.width, cirklo.canvas.height);
@@ -311,9 +313,10 @@ var cirklo = {
 			cirklo.context.fillRect(0,0, cirklo.canvas.width, cirklo.canvas.height);
 			cirklo.tontext.fillStyle = "#000";
 			cirklo.tontext.fillRect(0,0, cirklo.tanvas.width, cirklo.tanvas.height);
+			//$(cirklo.tanvas).css('opacity','0');
 		},
 
-		centerElementBackground: function(x, y, radius, count, image) {
+		centerElement: function(x, y, radius, count, image) {
 			var color = cirklo.draw.radialColor(-1, count);
 			var fill = color ;
 			if (image != null) fill = cirklo.context.createPattern(image,'repeat');
@@ -336,7 +339,7 @@ var cirklo = {
 			cirklo.context.fill();
 		},
 
-		elementBackground: function(x, y, radius, index, count, image, color) {
+		backgroundElement: function(x, y, radius, index, count, image, color) {
 			var _color = color || cirklo.draw.radialColor(index,count); 
 			var semi = Math.PI / count;
 			var starta = (index * 2 * Math.PI / count) - semi;
@@ -352,6 +355,35 @@ var cirklo = {
 			}
 		},
 
+		synapseElement: function(x, y, radius, index, count, image, color) {
+			var parent = cirklo.data.lastParent();
+			//var _color = color || cirklo.draw.radialColor(index,count); 
+			//_color = cirklo.draw.radialColor(index,count);
+			var synapse = parent.synapse || {};
+			var step = synapse.step || 10;
+			var maxItemRadius = synapse.maxRadius || 30;
+			var minItemRadius = synapse.minRadius || 15;
+			var maxPower = synapse.maxPower || 20.0;
+			var minPower = synapse.minPower || 0.0;
+			radius = cirklo.constants.item.radius;
+			var desv = 0;
+			for (var i = 0; i < radius; i+=step) {
+				var rnd = Math.random() - 0.5;
+				var ratio = (i / radius);
+				var sratio = Math.sin(Math.PI * 0.5 * ratio);
+				var power = maxPower - (sratio *  (maxPower - minPower));
+				var itemRadius = maxItemRadius - (ratio *  (maxItemRadius - minItemRadius));
+				var locus = cirklo.geometry.radialLocation(count, index, i, desv*power);
+				var color = cirklo.draw.radialColor(index, count, null, 1, sratio, sratio); 
+				cirklo.draw.circle(locus.left, locus.top, itemRadius, color, color);
+				desv += rnd;
+			}
+		},
+
+		circle: function(x, y, radius, stroke, fill) {
+			cirklo.draw.arc(x, y, radius, 0, 2 * Math.PI, stroke, fill);
+		}, 
+
 		arc: function(x, y, radius, start, end, stroke, fill) {
 			cirklo.context.lineWidth = 0;
 			cirklo.context.strokeStyle = stroke;
@@ -363,16 +395,19 @@ var cirklo = {
 			cirklo.context.fill();
 		},
 
-		radialColor: function(_index, _count) {
-			var tonalw = cirklo.draw.levelTonalWidth();
+		radialColor: function(_index, _count, tonalW, hRatio, sRatio, lRatio) {
+			hRatio = hRatio || 1; sRatio = sRatio || 1; lRatio = lRatio || 1;
+			tonalw = tonalW || cirklo.draw.levelTonalWidth();
 			if (_index < 0) { return tonalw.kern; }
-		    var h = (_index * tonalw.depth / (_count-1)) + tonalw.base;
-		    var s = tonalw.sat;
-		    var l = tonalw.light;
+		    var h = ((_index * tonalw.depth / (_count-1)) + tonalw.base) * hRatio;
+		    var s = tonalw.sat * sRatio;
+		    var l = tonalw.light * lRatio;
 		    return 'hsl(' + h + ',' + s + '%,' + l + '%)';
 		},
 
-		levelTonalWidth: function() {
+		levelTonalWidth: function(fLength, sLength) {
+			fLength = fLength ? fLength : cirklo.frags.length;
+			sLength = sLength ? sLength : cirklo.stack.length;
 			var _base = 0;
 			var dase = 0;
 			var _depth = 240;
@@ -385,11 +420,11 @@ var cirklo = {
 			var satstep = 20;
 			var lightstep = -10;
 
-			_sat = _sat + (satstep * cirklo.frags.length);
-			_light = _light + (lightstep * cirklo.frags.length);
+			_sat = _sat + (satstep * fLength);
+			_light = _light + (lightstep * fLength);
 
-			if (cirklo.stack.length != 0) {
-				for (var i = 0; i < cirklo.frags.length-1; i++) {
+			if (sLength != 0) {
+				for (var i = 0; i < fLength-1; i++) {
 					var lale = cirklo.frags[i];
 					var lali = cirklo.stack[i];
 					var slice = 1 / (lale + 2);
@@ -398,7 +433,7 @@ var cirklo = {
 					dase = (lali * pepth) + dase;
 					_depth = slice * _depth;
 					_base = (lali * _depth) + _base;
-					if (i == cirklo.frags.length-2) {
+					if (i == fLength - 2) {
 						var h = dase;
 						_kern = 'hsl(' + h + ',' + s + '%,' + l + '%)';
 					}

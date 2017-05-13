@@ -1,0 +1,225 @@
+<html>
+	<head>
+		<title>neŭrono</title>
+		<meta content="text/html; charset=utf-8"/>
+	    <meta charset="UTF-8">
+	    <script src="js/jquery.js" type="text/javascript"></script>
+	    <script src="js/cirklo.js"></script>
+	    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Open+Sans" />
+	    <link rel="stylesheet" type="text/css" href="css/cirklo.css">
+	</head>
+<script>
+
+var _ = 
+
+{
+  "canvas": {
+    "background":"#EEE"
+  },
+  "synapse": {
+    "step":5,
+    "maxRadius": 60,
+    "minRadius":10,
+    "maxPower":20.0,
+    "minPower":0
+  },
+  "title":{
+    "text":"neŭrono",
+    "style":{
+      "fontWeigth":"bold",
+      "color":"#FFF"
+    }
+  },
+  "color": "#FFF",
+  "content":[
+    {
+      "color":"#F00",
+      "title":{
+        "text":"About Us",
+        "style":{
+          "fontWeigth":"bold",
+          "color":"#FFF"
+        },
+        "class":"box-shadow"
+      },
+      "content":[
+        {
+          "title":{
+            "text":"A Small JS Library",
+            "style": {
+              "color": "#EEE"
+            }
+          },
+          "color":"#000"
+        },
+        {
+          "title":{
+            "text":"Creates Inifite Interfaces",
+            "style": {
+              "color": "#EEE"
+            }
+          },
+          "color":"#633"
+        },
+        {
+          "title":{
+            "text":"Brutally Intuitive",
+            "style": {
+              "color": "#EEE"
+            }
+          },
+          "color":"#200"
+        }
+      ]
+    },
+    {
+      "title":{
+        "text":"Technology",
+        "style":{
+          "fontWeigth":"bold",
+          "color":"#FFF"
+        }
+      },
+      "content":[
+        {
+          "title":{
+            "text":"Automated Design",
+            "style": {
+              "color":"#FFF"
+            }
+          },
+          "image":"images/skinclear.jpg"
+        },
+        {
+          "title":{
+            "text":"Inifite Exploration",
+            "style": {
+              "color":"#FFF"
+            }
+          },
+          "image":"images/skinbrown.jpg"
+        },
+        {
+          "title":{
+            "text":"CSS, JSON and Text Only",
+            "style": {
+              "color":"#FFF"
+            }
+          },
+          "image":"images/skindark.jpg"
+        }
+      ]
+    },
+    {
+      "title":{
+        "text":"Apps",
+        "style":{
+          "color":"#FFF"
+        }
+      },
+      "content":[
+        {
+          "title":{
+            "text":"Luis J Camargo",
+            "style": {
+              "color": "#EEE",
+              "fontSize": "22px"
+            }
+          },
+          "image":"images/redcells.jpg"
+        },
+        {
+          "title":{
+            "text":"created by",
+            "style": {
+              "color": "#EEE"
+            }
+          },
+          "image":"images/stains.jpg",
+        }
+      ]
+    },
+    {
+      "focus":0,
+      "title":{
+        "text":"Science",
+        "style":{
+          "color":"#FFF"
+        }
+      },
+      "content":[
+        {
+          "image":"images/circlesdark.jpg",
+          "title":{
+            "text":"github",
+            "style":{
+              "color":"#EEE",
+              "fontSize":"48px"
+            }
+          },
+          "contentLink":"https://www.github.com/lsjcp/cirklo"
+        },
+        {
+          "image":"images/circlesred.jpg",
+          "title":{
+            "text":"MIT License Open Source",
+            "style":{
+              "color":"#FFF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "image":"images/electrophoresis.jpg",
+      "focus":0,
+      "title":{
+        "text":"Vision",
+        "style":{
+          "color":"#FFF"
+        }
+      },
+      "click":{
+        "kind":"tell",
+        "name":"content",
+        "predicate":"fullweather",
+        "gesture":"select"
+      },
+      "content":[
+        {
+          "image":"images/mexican.png",
+          "title":{
+            "text":"ONE"
+          }
+        },
+        {
+          "image":"images/bollywood.jpg",
+          "title":{
+            "text":"TWO"
+          }
+        },
+        {
+          "image":"images/flower.jpg",
+          "title":{
+            "text":"THREE"
+          }
+        },
+        {
+          "image":"images/flowers2.jpg",
+          "title":{
+            "text":"FOUR"
+          }
+        }
+      ]
+    }
+  ]
+}
+
+;
+
+$(document).ready(function() {
+    cirklo.init('body', _);
+});
+</script>
+<body></body>
+</html>
